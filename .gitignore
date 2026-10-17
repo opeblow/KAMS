@@ -1,0 +1,50 @@
+# Dependencies
+/node_modules/
+/.pnp
+.pnp.*
+
+# Next.js output
+/.next/
+/out/
+/build/
+/dist/
+
+# Local secrets and environment files
+.env*
+!.env.example
+
+# Stripe Projects local state, credentials, and cache
+/.projects/
+
+# Local agent/editor configuration
+/.agents/
+/.claude/
+/.cursor/
+
+# Logs and package-manager debug output
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test and coverage output
+/coverage/
+/playwright-report/
+/test-results/
+
+# Tool caches
+/.turbo/
+/.cache/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Deployment output
+/.vercel/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
