@@ -13,8 +13,9 @@
 .env*
 !.env.example
 
-# Stripe Projects local state, credentials, and cache
-/.projects/
+# Stripe Projects credentials and cache (keep state.json shareable)
+/.projects/vault/
+/.projects/cache/
 
 # Local agent/editor configuration
 /.agents/
