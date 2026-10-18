@@ -1,10 +1,16 @@
+export interface StorefrontProduct {
+  id: string;
+  name: string;
+  description: string;
+  priceUsd: string;
+}
+
 export interface StorefrontBrief {
   businessName: string;
   businessType: string;
-  offer: string;
+  products: StorefrontProduct[];
   description: string;
   style: string;
-  priceUsd: string;
 }
 
 export type PipelineStepStatus = "idle" | "running" | "completed" | "failed";

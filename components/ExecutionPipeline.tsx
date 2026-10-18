@@ -64,7 +64,7 @@ export const ExecutionPipeline: React.FC<ExecutionPipelineProps> = ({ steps, act
                   >
                     {step.label}
                   </p>
-                  <span className="text-[10px] text-slate-400 font-mono">Step {idx + 1}/4</span>
+                  <span className="text-[10px] text-slate-400 font-mono">Step {idx + 1}/{steps.length}</span>
                 </div>
                 <p className="text-[11px] text-slate-500 mt-0.5 truncate">{step.detail}</p>
               </div>
