@@ -6,10 +6,9 @@ Built for the CreateOS × Stripe Projects Hackathon.
 
 * * *
 ## Live
-
+  * Live demo - https://kams-roan.vercel.app
   * 🎥 Demo video — https://youtu.be/xK3cGcaKdYI
   * 📖 Setup guide — [`setup.md`](setup.md)
-  * Live demo - https://kams-roan.vercel.app
   * 🗺️ Architecture — see [Architecture](#architecture) below
 
 * * *
