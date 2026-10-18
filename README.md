@@ -7,8 +7,7 @@ Built for the CreateOS × Stripe Projects Hackathon.
 * * *
 ## Live
 
-  * 🎥 Demo video — not published yet
-  * 🌐 Live demo — each build returns a temporary CreateOS Sandbox preview URL; no permanent public demo is hosted
+  * 🎥 Demo video — https://youtu.be/xK3cGcaKdYI
   * 📖 Setup guide — [`setup.md`](setup.md)
   * 🗺️ Architecture — see [Architecture](#architecture) below
 
