@@ -2,7 +2,7 @@
 
 ## Run the app
 
-Install dependencies with `npm.cmd install`, then start the app with `npm.cmd run dev`. Open `http://localhost:3000` for the brief form and verified preview panel. The form calls `POST /api/build`, which streams real build progress and a verified preview URL, or a safe error. Each successful build creates a CreateOS Sandbox, so keep requests to one at a time while demoing.
+Install dependencies with `npm install`, then start the app with `npm run dev`. Open `http://localhost:3000` for the brief form and verified preview panel. The form calls `POST /api/build`, which streams real build progress and a verified preview URL, or a safe error. Each successful build creates a CreateOS Sandbox and one Stripe test Checkout Session per listed item, so keep requests to one at a time while demoing.
 
 Example request body (PowerShell):
 
@@ -10,42 +10,33 @@ Example request body (PowerShell):
 $brief = @{
   businessName = 'Butter & Bloom'
   businessType = 'neighborhood bakery'
-  offer = 'sourdough loaves and seasonal pastries'
-  priceUsd = '8.50'
+  products = @(
+    @{ name = 'Country Sourdough Loaf'; description = 'Naturally leavened and baked fresh each morning.'; priceUsd = '8.50' },
+    @{ name = 'Seasonal Pastry Box'; description = 'Six pastries made with seasonal ingredients.'; priceUsd = '18.00' }
+  )
   description = 'A neighborhood bakery making naturally leavened sourdough and fresh pastries every morning.'
   style = 'warm editorial, cream and sage green'
-} | ConvertTo-Json
+} | ConvertTo-Json -Depth 4
 Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost:3000/api/build' -Method Post -ContentType 'application/json' -Body $brief
 ```
 
 This guide sets up the Kams workspace with Stripe Projects and CreateOS Sandbox. Run commands from this directory. The steps below use free/test resources; review any provider terms when prompted. Do not use live payment credentials for the demo.
 
-### Windows workstation notes
-
-This workspace is running on Windows. Use PowerShell and `npm.cmd` (the `npm` PowerShell shim may be blocked by the machine's execution policy). Install Stripe CLI and its Projects plugin with:
-
-```powershell
-npm.cmd install --global @stripe/cli
-stripe plugin install projects
-```
-
-If `stripe` is not found in the current terminal after install, invoke `$env:APPDATA\npm\stripe.cmd` or add `$env:APPDATA\npm` to the user PATH, then open a new terminal. The Stripe CLI login flow requires browser authorization; complete it on this machine and never share its device code.
-
-CreateOS's published CLI install instructions currently cover macOS and Linux. On Windows, use the CreateOS TypeScript Sandbox SDK from the app (Node.js 20+ is already installed here) rather than relying on an undocumented Windows CLI installer. The SDK is the app's actual integration path and reads `CREATEOS_SANDBOX_API_KEY`.
+Use a terminal on macOS, Linux, or Windows. Install the Stripe CLI and its Projects plugin using Stripe's current installation instructions for your platform. The app itself uses the CreateOS TypeScript Sandbox SDK, so a separate CreateOS CLI installation is optional for running Kams. The app supplies the Stripe Projects CreateOS credential to the SDK on the server.
 
 ## 1. Prerequisites
 
-- Node.js 20 or newer, npm, and Git. (Windows-specific commands are documented above.)
+- Node.js 20.9 or newer, npm, and Git.
 - Stripe CLI with the Projects plugin.
 - A Stripe account authorized for the **Kams** project/account.
 - A CreateOS Sandbox API key or CreateOS credentials provisioned through Stripe Projects.
 - An Anthropic API key available locally.
 
-Check what is installed (PowerShell):
+Check what is installed:
 
 ```powershell
 node --version
-npm.cmd --version
+npm --version
 stripe --version
 stripe projects --help
 createos version
@@ -66,7 +57,7 @@ brew install createos
 
 ## 2. Connect Stripe Projects to this clean directory
 
-From `Documents/CreateOS-Hackathon/kams`:
+From the root of this repository:
 
 ```bash
 stripe projects init kams
@@ -115,11 +106,11 @@ The expected output is `42`. Remove the smoke-test sandbox when finished:
 createos sandbox rm kams-smoke-test --force
 ```
 
-On Windows, use the CreateOS SDK smoke test from the app instead of the undocumented CLI install path. The Sandbox SDK normally reads `CREATEOS_SANDBOX_API_KEY`, while the current Stripe Projects integration provides `CREATEOS_API_KEY`. Pass that value explicitly as the server-side `apiKey` option; leave the SDK base URL at its Sandbox default unless a Sandbox-specific URL is configured. Do not create a second key or copy credentials into source files.
+The app uses the CreateOS SDK for its Sandbox smoke test rather than depending on a separate CreateOS CLI install. The SDK normally reads `CREATEOS_SANDBOX_API_KEY`, while the current Stripe Projects integration provides `CREATEOS_API_KEY`. Pass that value explicitly as the server-side `apiKey` option; leave the SDK base URL at its Sandbox default unless a Sandbox-specific URL is configured. Do not create a second key or copy credentials into source files.
 
 ## 5. Application environment and dependencies
 
-The implementation should use the CreateOS TypeScript SDK from the server:
+The app uses the CreateOS TypeScript SDK from the server:
 
 ```bash
 npm install @nodeops-createos/sandbox @anthropic-ai/sdk
@@ -133,15 +124,15 @@ For each storefront build, the app creates a sandbox with ingress disabled, uplo
 
 The CreateOS SDK tutorial shows the complete AI-generator pattern: generate code, upload it to a sandbox, run a server, and return a public URL: <https://createos.sh/docs/Sandbox/SDK/Tutorial/>. Ingress details: <https://createos.sh/docs/Sandbox/SDK/How-To/Expose-A-Service/>.
 
-## 7. Stripe test-mode Checkout
+## 7. Stripe test-mode Checkout per item
 
-The build creates a hosted Stripe Checkout Session for one featured item and adds its URL to the generated page after the Sandbox server is reachable. Enter a test-mode secret key from Stripe Dashboard → Developers → API keys into the local ignored `.env` file:
+The build creates a hosted Stripe Checkout Session for each listed product or service and places its URL in that item's **Pay now** button. Each session has its own price and Stripe product details. Enter a test-mode secret key from Stripe Dashboard → Developers → API keys into the local ignored `.env` file:
 
 ```dotenv
 STRIPE_SECRET_KEY=sk_test_...
 ```
 
-Kams rejects live keys. Keep this key server-side; never place it in generated storefront files, client code, or the Sandbox. A successful test Checkout returns to a clear confirmation page inside the preview; cancelling returns to a separate cancellation page. Use Stripe's test card `4242 4242 4242 4242`, any future expiration date, and any CVC to exercise test Checkout. The generated URL is a build-time Checkout Session and expires; rebuild to create a fresh one. This MVP does not fulfill orders or verify payment webhooks.
+Kams rejects live keys. Keep this key server-side; never place it in generated storefront files, client code, or the Sandbox. A successful test Checkout returns to a clear confirmation page inside the preview; cancelling returns to a separate cancellation page. Use Stripe's test card `4242 4242 4242 4242`, any future expiration date, and any CVC to exercise test Checkout. Each generated URL is a build-time Checkout Session and expires; rebuild to create fresh sessions. This MVP does not fulfill orders or verify payment webhooks.
 
 ## 8. Before a demo or commit
 

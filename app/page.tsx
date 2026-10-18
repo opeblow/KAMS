@@ -11,8 +11,8 @@ const INITIAL_STEPS: PipelineStep[] = [
   { id: "brief", label: "Validate business brief", detail: "Checking the details you provided", status: "idle" },
   { id: "generate", label: "Generate storefront files", detail: "Writing and safety-checking static HTML and CSS", status: "idle" },
   { id: "sandbox", label: "Run in CreateOS Sandbox", detail: "Uploading files and starting the preview server", status: "idle" },
-  { id: "checkout", label: "Connect Stripe test Checkout", detail: "Creating a one-time test payment for the featured offer", status: "idle" },
-  { id: "verify", label: "Verify live preview", detail: "Checking the public page, business details, and Checkout link", status: "idle" },
+  { id: "checkout", label: "Create Stripe test Checkouts", detail: "Creating one test payment link for each item", status: "idle" },
+  { id: "verify", label: "Verify live preview", detail: "Checking the public page, products, and each Pay now link", status: "idle" },
 ];
 
 function stepsForPhase(phase: string): PipelineStep[] {
@@ -32,10 +32,9 @@ export default function Home() {
   const [brief, setBrief] = useState<StorefrontBrief>({
     businessName: "",
     businessType: "",
-    offer: "",
+    products: [{ id: "product-1", name: "", description: "", priceUsd: "8.50" }],
     description: "",
     style: "",
-    priceUsd: "8.50",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [steps, setSteps] = useState<PipelineStep[]>(INITIAL_STEPS);
@@ -60,7 +59,10 @@ export default function Home() {
       const response = await fetch("/api/build", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
-        body: JSON.stringify(brief),
+        body: JSON.stringify({
+          ...brief,
+          products: brief.products.map(({ name, description, priceUsd }) => ({ name, description, priceUsd })),
+        }),
       });
       if (!response.ok) {
         const failure = await response.json().catch(() => null) as { error?: string } | null;
